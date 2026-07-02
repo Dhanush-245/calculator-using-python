@@ -1,82 +1,69 @@
 """A simple command-line calculator."""
 
-
-def add(left, right):
-    return left + right
+from operator import add, mul, sub, truediv
 
 
-def subtract(left, right):
-    return left - right
-
-
-def multiply(left, right):
-    return left * right
-
-
-def divide(left, right):
-    if right == 0:
-        raise ZeroDivisionError("Cannot divide by zero.")
-    return left / right
-
+END_COMMAND = "end"
 
 OPERATIONS = {
     "+": add,
-    "-": subtract,
-    "*": multiply,
-    "/": divide,
+    "-": sub,
+    "*": mul,
+    "/": truediv,
 }
 
 
-def read_number(prompt, allow_end=False):
+def read_value(prompt, parser, valid_values=None):
     while True:
         value = input(prompt).strip()
-        if allow_end and value.lower() == "end":
+        if value.lower() == END_COMMAND:
             return None
+
+        if valid_values is not None and value not in valid_values:
+            choices = ", ".join(valid_values)
+            print(f"Please choose one of these options: {choices}, or type '{END_COMMAND}'.")
+            continue
+
         try:
-            return float(value)
+            return parser(value)
         except ValueError:
-            if allow_end:
-                print("Please enter a valid number, or type 'end' to finish.")
-            else:
-                print("Please enter a valid number.")
+            print(f"Please enter a valid number, or type '{END_COMMAND}'.")
 
 
-def read_operation(allow_end=False):
+def read_number(prompt):
+    return read_value(prompt, float)
+
+
+def read_operation():
     choices = ", ".join(OPERATIONS)
-    while True:
-        operation = input(f"Choose an operation ({choices}): ").strip()
-        if allow_end and operation.lower() == "end":
-            return None
-        if operation in OPERATIONS:
-            return operation
-        if allow_end:
-            print("Please choose one of the listed operations, or type 'end' to finish.")
-        else:
-            print("Please choose one of the listed operations.")
+    return read_value(f"Choose an operation ({choices}): ", str, OPERATIONS)
 
 
 def calculate():
     print("Python Calculator")
     print("Start with a number, then keep adding operations and numbers.")
-    print("Type 'end' when you are finished.")
+    print(f"Type '{END_COMMAND}' when you are finished.")
 
     result = read_number("First number: ")
+    if result is None:
+        print("Goodbye!")
+        return
 
     while True:
-        operation = read_operation(allow_end=True)
+        operation = read_operation()
         if operation is None:
             break
 
-        next_number = read_number("Next number: ", allow_end=True)
+        next_number = read_number("Next number: ")
         if next_number is None:
             break
 
-        try:
-            result = OPERATIONS[operation](result, next_number)
-        except ZeroDivisionError as error:
-            print(error)
-        else:
-            print(f"Current result: {result}")
+        if operation == "/" and next_number == 0:
+            print("Cannot divide by zero.")
+            continue
+
+        result = OPERATIONS[operation](result, next_number)
+        print(f"Current result: {result}")
 
     print(f"Final result: {result}")
     print("Goodbye!")
