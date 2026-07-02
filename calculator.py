@@ -27,44 +27,59 @@ OPERATIONS = {
 }
 
 
-def read_number(prompt):
+def read_number(prompt, allow_end=False):
     while True:
-        value = input(prompt)
+        value = input(prompt).strip()
+        if allow_end and value.lower() == "end":
+            return None
         try:
             return float(value)
         except ValueError:
-            print("Please enter a valid number.")
+            if allow_end:
+                print("Please enter a valid number, or type 'end' to finish.")
+            else:
+                print("Please enter a valid number.")
 
 
-def read_operation():
+def read_operation(allow_end=False):
     choices = ", ".join(OPERATIONS)
     while True:
         operation = input(f"Choose an operation ({choices}): ").strip()
+        if allow_end and operation.lower() == "end":
+            return None
         if operation in OPERATIONS:
             return operation
-        print("Please choose one of the listed operations.")
+        if allow_end:
+            print("Please choose one of the listed operations, or type 'end' to finish.")
+        else:
+            print("Please choose one of the listed operations.")
 
 
 def calculate():
     print("Python Calculator")
-    print("Enter two numbers and choose an operation.")
+    print("Start with a number, then keep adding operations and numbers.")
+    print("Type 'end' when you are finished.")
+
+    result = read_number("First number: ")
 
     while True:
-        first_number = read_number("First number: ")
-        operation = read_operation()
-        second_number = read_number("Second number: ")
+        operation = read_operation(allow_end=True)
+        if operation is None:
+            break
+
+        next_number = read_number("Next number: ", allow_end=True)
+        if next_number is None:
+            break
 
         try:
-            result = OPERATIONS[operation](first_number, second_number)
+            result = OPERATIONS[operation](result, next_number)
         except ZeroDivisionError as error:
             print(error)
         else:
-            print(f"Result: {result}")
+            print(f"Current result: {result}")
 
-        again = input("Calculate again? (y/n): ").strip().lower()
-        if again != "y":
-            print("Goodbye!")
-            break
+    print(f"Final result: {result}")
+    print("Goodbye!")
 
 
 if __name__ == "__main__":
